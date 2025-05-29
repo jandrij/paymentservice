@@ -53,12 +53,11 @@ class PaymentServiceTest {
             p.setId(1L);  // simulate DB-generated ID
             return p;
         });
-        when(notificationService.notifyExternalService(any(Payment.class))).thenReturn(true);
 
         Long createdId = paymentService.createPayment(paymentToSave);
 
         assertNotNull(createdId);
-        verify(paymentRepository, times(2)).save(any(Payment.class));
+        verify(paymentRepository).save(any(Payment.class));
         verify(notificationService).notifyExternalService(any(Payment.class));
     }
 

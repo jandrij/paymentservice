@@ -27,22 +27,12 @@ public class PaymentService {
         this.notificationService = notificationService;
     }
 
-    @Async
-    public void notifyAndSaveStatus(Payment payment) {
-        Boolean success = notificationService.notifyExternalService(payment);
-        if (success == null) {
-            return;
-        }
-        payment.setNotificationSuccess(success);
-        repo.save(payment);
-    }
-
     public Long createPayment(Payment payment) {
         validatePayment(payment);
         payment.setCreatedAt(LocalDateTime.now());
         payment.setIsCanceled(Boolean.FALSE);
         Payment savedPayment = repo.save(payment);
-        notifyAndSaveStatus(savedPayment);
+        notificationService.notifyExternalService(savedPayment);
         return savedPayment.getId();
     }
 
