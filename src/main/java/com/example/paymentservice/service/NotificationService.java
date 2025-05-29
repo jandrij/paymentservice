@@ -9,8 +9,8 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class NotificationService {
 
-    public static final String TYPE1_NOTIFICATION_URL = "https://example.com/type1Notify";
-    public static final String TYPE2_NOTIFICATION_URL = "https://example.com/type2Notify";
+    public static final String TYPE1_NOTIFICATION_URL = "https://httpbin.org/status/200";
+    public static final String TYPE2_NOTIFICATION_URL = "https://httpbin.org/status/500";
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -22,7 +22,7 @@ public class NotificationService {
         };
 
         if (url == null) {
-            return null; // No notification for TYPE3 or others
+            return null;
         }
 
         try {

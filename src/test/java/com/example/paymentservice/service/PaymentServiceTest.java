@@ -18,6 +18,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.any;
@@ -30,8 +31,8 @@ class PaymentServiceTest {
     @Mock
     private PaymentRepository paymentRepository;
 
-//    @Mock
-//    private NotificationService notificationService;
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private PaymentService paymentService;
@@ -52,13 +53,13 @@ class PaymentServiceTest {
             p.setId(1L);  // simulate DB-generated ID
             return p;
         });
-//        when(notificationService.notifyExternalService(any(Payment.class))).thenReturn(true);
+        when(notificationService.notifyExternalService(any(Payment.class))).thenReturn(true);
 
         Long createdId = paymentService.createPayment(paymentToSave);
 
         assertNotNull(createdId);
-        verify(paymentRepository).save(any(Payment.class));
-//        verify(notificationService).notifyExternalService(any(Payment.class));
+        verify(paymentRepository, times(2)).save(any(Payment.class));
+        verify(notificationService).notifyExternalService(any(Payment.class));
     }
 
     @Test

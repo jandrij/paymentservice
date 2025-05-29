@@ -42,7 +42,7 @@ public class PaymentService {
         payment.setCreatedAt(LocalDateTime.now());
         payment.setIsCanceled(Boolean.FALSE);
         Payment savedPayment = repo.save(payment);
-//        notifyAndSaveStatus(savedPayment);
+        notifyAndSaveStatus(savedPayment);
         return savedPayment.getId();
     }
 
