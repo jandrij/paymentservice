@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -41,7 +42,7 @@ class PaymentServiceTest {
     void testCreatePayment_success() {
         Payment paymentToSave = Payment.builder()
                 .type(PaymentType.TYPE1)
-                .amount(new BigDecimal("100"))
+                .amount(new BigDecimal("100.00"))
                 .currency(CurrencyType.EUR)
                 .debtorIban("DE1234567890")
                 .creditorIban("DE0987654321")
@@ -50,7 +51,7 @@ class PaymentServiceTest {
 
         when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> {
             Payment p = i.getArgument(0);
-            p.setId(1L);  // simulate DB-generated ID
+            p.setId(1L);
             return p;
         });
 
@@ -62,30 +63,92 @@ class PaymentServiceTest {
     }
 
     @Test
-    void testCreatePayment_invalidAmount_throwsException() {
+    void testCreatePayment_invalidCurrencyForType1_throwsException() {
         Payment paymentToSave = Payment.builder()
                 .type(PaymentType.TYPE1)
-                .amount(new BigDecimal("100"))
+                .amount(new BigDecimal("100.00"))
                 .currency(CurrencyType.USD)
                 .debtorIban("DE1234567890")
                 .creditorIban("DE0987654321")
                 .details("Payment details")
                 .build();
 
-        assertThrows(BusinessValidationException.class, () -> paymentService.createPayment(paymentToSave));
+        RuntimeException ex = assertThrows(BusinessValidationException.class,
+                () -> paymentService.createPayment(paymentToSave));
+        assertEquals("Payment of TYPE1 must be EUR", ex.getMessage());
     }
 
     @Test
-    void cancelPayment_whenValid_shouldSetCanceledAndReturnFee() {
+    void testCreatePayment_DetailsMissingForType1_throwsException() {
+        Payment paymentToSave = Payment.builder()
+                .type(PaymentType.TYPE1)
+                .amount(new BigDecimal("100.00"))
+                .currency(CurrencyType.EUR)
+                .debtorIban("DE1234567890")
+                .creditorIban("DE0987654321")
+                .build();
+
+        RuntimeException ex = assertThrows(BusinessValidationException.class,
+                () -> paymentService.createPayment(paymentToSave));
+        assertEquals("Details are required for TYPE1 payment", ex.getMessage());
+    }
+
+    @Test
+    void testCreatePayment_invalidCurrencyForType2_throwsException() {
+        Payment paymentToSave = Payment.builder()
+                .type(PaymentType.TYPE2)
+                .amount(new BigDecimal("100.00"))
+                .currency(CurrencyType.EUR)
+                .debtorIban("DE1234567890")
+                .creditorIban("DE0987654321")
+                .build();
+
+        RuntimeException ex = assertThrows(BusinessValidationException.class,
+                () -> paymentService.createPayment(paymentToSave));
+        assertEquals("Payment of TYPE2 must be USD", ex.getMessage());
+    }
+
+    @Test
+    void testCreatePayment_CreditorBankBICMissingForType3_throwsException() {
+        Payment paymentToSave = Payment.builder()
+                .type(PaymentType.TYPE3)
+                .amount(new BigDecimal("100.00"))
+                .currency(CurrencyType.EUR)
+                .debtorIban("DE1234567890")
+                .creditorIban("DE0987654321")
+                .build();
+
+        RuntimeException ex = assertThrows(BusinessValidationException.class,
+                () -> paymentService.createPayment(paymentToSave));
+        assertEquals("Creditor bank BIC is required for TYPE3 payment", ex.getMessage());
+    }
+
+    @Test
+    void testCreatePayment_IncorrectAmountScale_throwsException() {
+        Payment paymentToSave = Payment.builder()
+                .type(PaymentType.TYPE3)
+                .amount(new BigDecimal("100.1"))
+                .currency(CurrencyType.EUR)
+                .debtorIban("DE1234567890")
+                .creditorIban("DE0987654321")
+                .build();
+
+        RuntimeException ex = assertThrows(BusinessValidationException.class,
+                () -> paymentService.createPayment(paymentToSave));
+        assertEquals("Monetary amount must have exactly 2 decimal places", ex.getMessage());
+    }
+
+    @Test
+    void cancelPayment_ValidInputType1_SetCanceledAndReturnFee() {
         Payment payment = Payment.builder()
                 .id(1L)
                 .type(PaymentType.TYPE1)
-                .amount(new BigDecimal("100"))
+                .amount(new BigDecimal("100.00"))
                 .currency(CurrencyType.EUR)
                 .debtorIban("DE123")
                 .creditorIban("DE321")
                 .details("Payment details")
-                .createdAt(LocalDateTime.now().minusHours(2))
+                .createdAt(LocalDateTime.now().minusHours(2).minusMinutes(20))
                 .isCanceled(false)
                 .build();
 
@@ -102,16 +165,67 @@ class PaymentServiceTest {
     }
 
     @Test
-    void cancelPayment_whenNotFound_shouldThrowException() {
+    void cancelPayment_ValidInputType2_SetCanceledAndReturnFee() {
+        Payment payment = Payment.builder()
+                .id(1L)
+                .type(PaymentType.TYPE2)
+                .amount(new BigDecimal("100.00"))
+                .currency(CurrencyType.EUR)
+                .debtorIban("DE123")
+                .creditorIban("DE321")
+                .details("Payment details")
+                .createdAt(LocalDateTime.now().minusHours(3).minusMinutes(20))
+                .isCanceled(false)
+                .build();
+
+        when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
+
+        BigDecimal fee = paymentService.cancelPayment(1L);
+
+        assertEquals(new BigDecimal("0.30"), fee); // 3h * 0.10
+        assertTrue(payment.getIsCanceled());
+        assertEquals(fee, payment.getCancellationFee());
+
+        verify(paymentRepository).save(payment);
+    }
+
+    @Test
+    void cancelPayment_ValidInputType3_SetCanceledAndReturnFee() {
+        Payment payment = Payment.builder()
+                .id(1L)
+                .type(PaymentType.TYPE3)
+                .amount(new BigDecimal("100.00"))
+                .currency(CurrencyType.EUR)
+                .debtorIban("DE123")
+                .creditorIban("DE321")
+                .details("Payment details")
+                .createdAt(LocalDateTime.now().minusHours(4).minusMinutes(20))
+                .isCanceled(false)
+                .build();
+
+        when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
+
+        BigDecimal fee = paymentService.cancelPayment(1L);
+
+        assertEquals(new BigDecimal("0.60"), fee); // 4h * 0.15
+        assertTrue(payment.getIsCanceled());
+        assertEquals(fee, payment.getCancellationFee());
+
+        verify(paymentRepository).save(payment);
+    }
+
+    @Test
+    void cancelPayment_PaymentNotFound_ThrowException() {
         when(paymentRepository.findById(1L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> paymentService.cancelPayment(1L));
-
         assertEquals("Payment not found", ex.getMessage());
     }
 
     @Test
-    void cancelPayment_whenAlreadyCanceled_shouldThrowException() {
+    void cancelPayment_AlreadyCanceled_ThrowException() {
         Payment payment = Payment.builder()
                 .id(1L)
                 .isCanceled(true)
@@ -121,12 +235,11 @@ class PaymentServiceTest {
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
 
         RuntimeException ex = assertThrows(BusinessValidationException.class, () -> paymentService.cancelPayment(1L));
-
         assertEquals("Payment is already canceled", ex.getMessage());
     }
 
     @Test
-    void cancelPayment_whenDifferentDay_shouldThrowException() {
+    void cancelPayment_DifferentDay_ThrowException() {
         Payment payment = Payment.builder()
                 .id(1L)
                 .isCanceled(false)
@@ -136,7 +249,6 @@ class PaymentServiceTest {
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
 
         RuntimeException ex = assertThrows(BusinessValidationException.class, () -> paymentService.cancelPayment(1L));
-
         assertEquals("Payment can only be cancel on the same day", ex.getMessage());
     }
 }

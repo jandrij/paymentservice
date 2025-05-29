@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -67,10 +68,13 @@ public class PaymentService {
             case TYPE2 -> BigDecimal.valueOf(0.10);
             case TYPE3 -> BigDecimal.valueOf(0.15);
         };
-        return BigDecimal.valueOf(hours).multiply(coefficient);
+        return BigDecimal.valueOf(hours).multiply(coefficient).setScale(2, RoundingMode.HALF_UP);
     }
 
     private void validatePayment(Payment payment) {
+        if (payment.getAmount().scale() != 2) {
+            throw new BusinessValidationException("Monetary amount must have exactly 2 decimal places");
+        }
         switch (payment.getType()) {
             case TYPE1 -> {
                 if (!CurrencyType.EUR.equals(payment.getCurrency())) {
