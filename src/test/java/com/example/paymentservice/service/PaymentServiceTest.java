@@ -4,6 +4,7 @@ import com.example.paymentservice.entity.Payment;
 import com.example.paymentservice.repository.PaymentRepository;
 import com.example.paymentservice.types.CurrencyType;
 import com.example.paymentservice.types.PaymentType;
+import com.example.paymentservice.exception.BusinessValidationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -71,7 +72,7 @@ class PaymentServiceTest {
                 .details("Payment details")
                 .build();
 
-        assertThrows(IllegalArgumentException.class, () -> paymentService.createPayment(paymentToSave));
+        assertThrows(BusinessValidationException.class, () -> paymentService.createPayment(paymentToSave));
     }
 
     @Test
@@ -119,7 +120,7 @@ class PaymentServiceTest {
 
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> paymentService.cancelPayment(1L));
+        RuntimeException ex = assertThrows(BusinessValidationException.class, () -> paymentService.cancelPayment(1L));
 
         assertEquals("Payment is already canceled", ex.getMessage());
     }
@@ -134,7 +135,7 @@ class PaymentServiceTest {
 
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> paymentService.cancelPayment(1L));
+        RuntimeException ex = assertThrows(BusinessValidationException.class, () -> paymentService.cancelPayment(1L));
 
         assertEquals("Payment can only be cancel on the same day", ex.getMessage());
     }

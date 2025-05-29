@@ -3,6 +3,8 @@ package com.example.paymentservice.service;
 import com.example.paymentservice.entity.Payment;
 import com.example.paymentservice.repository.PaymentRepository;
 import com.example.paymentservice.types.CurrencyType;
+import com.example.paymentservice.exception.BusinessValidationException;
+import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 import org.springframework.scheduling.annotation.Async;
@@ -53,10 +55,10 @@ public class PaymentService {
         try {
             Payment payment = repo.findById(id).orElseThrow(() -> new RuntimeException("Payment not found"));
             if (Boolean.TRUE.equals(payment.getIsCanceled())){
-                throw new RuntimeException("Payment is already canceled");
+                throw new BusinessValidationException("Payment is already canceled");
             }
             if (!LocalDateTime.now().toLocalDate().equals(payment.getCreatedAt().toLocalDate())) {
-                throw new RuntimeException("Payment can only be cancel on the same day");
+                throw new BusinessValidationException("Payment can only be cancel on the same day");
             }
             payment.setIsCanceled(Boolean.TRUE);
             BigDecimal fee = calculateCancellationFee(payment);
@@ -82,20 +84,20 @@ public class PaymentService {
         switch (payment.getType()) {
             case TYPE1 -> {
                 if (!CurrencyType.EUR.equals(payment.getCurrency())) {
-                    throw new IllegalArgumentException("Payment of TYPE1 must be EUR");
+                    throw new BusinessValidationException("Payment of TYPE1 must be EUR");
                 }
                 if (payment.getDetails() == null || payment.getDetails().isEmpty()) {
-                    throw new IllegalArgumentException("Details required for TYPE1 payment");
+                    throw new BusinessValidationException("Details are required for TYPE1 payment");
                 }
             }
             case TYPE2 -> {
-                if (!CurrencyType.EUR.equals(payment.getCurrency())) {
-                    throw new IllegalArgumentException("Payment of TYPE2 must be USD");
+                if (!CurrencyType.USD.equals(payment.getCurrency())) {
+                    throw new BusinessValidationException("Payment of TYPE2 must be USD");
                 }
             }
             case TYPE3 -> {
-                if (payment.getCreditorBankBic() == null || payment.getCreditorBankBic().isEmpty()) {
-                    throw new IllegalArgumentException("BIC is required for TYPE3 payment");
+                if (StringUtils.isBlank(payment.getCreditorBankBic())) {
+                    throw new BusinessValidationException("Creditor bank BIC is required for TYPE3 payment");
                 }
             }
         }
@@ -103,7 +105,7 @@ public class PaymentService {
 
     public List<Payment> getFilteredPayments(BigDecimal amountMin) {
         if (amountMin != null && amountMin.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Monetary value can not be negative");
+            throw new BusinessValidationException("Monetary value can not be negative");
         }
         return repo.findActivePaymentsWithOptionalMinAmount(amountMin);
     }
