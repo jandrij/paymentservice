@@ -3,6 +3,7 @@ package com.example.paymentservice.controller;
 import com.example.paymentservice.dto.CreatePaymentRequestDto;
 import com.example.paymentservice.dto.PaymentResponseDto;
 import com.example.paymentservice.entity.Payment;
+import com.example.paymentservice.mapper.PaymentMapper;
 import com.example.paymentservice.service.PaymentService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -23,22 +24,16 @@ import java.util.List;
 public class PaymentController {
 
     private final PaymentService service;
+    private final PaymentMapper mapper;
 
-    public PaymentController(PaymentService service) {
+    public PaymentController(PaymentService service, PaymentMapper mapper) {
         this.service = service;
+        this.mapper = mapper;
     }
 
     @PostMapping
     public ResponseEntity<PaymentResponseDto> createPayment(@RequestBody @Valid CreatePaymentRequestDto request) {
-        Long paymentId = service.createPayment(Payment.builder()
-                .amount(request.getAmount())
-                .currency(request.getCurrency())
-                .debtorIban(request.getDebtorIban())
-                .creditorIban(request.getCreditorIban())
-                .type(request.getType())
-                .details(request.getDetails())
-                .creditorBankBic(request.getCreditorBankBic())
-                .build());
+        Long paymentId = service.createPayment(mapper.toEntity(request));
         URI location = URI.create("/payments/" + paymentId);
         return ResponseEntity.created(location).body(PaymentResponseDto.builder().id(paymentId).build());
     }
@@ -48,26 +43,18 @@ public class PaymentController {
             @RequestParam(required = false) BigDecimal amountMin,
             @RequestParam(required = false) BigDecimal amountMax) {
         List<Payment> payments = service.getFilteredPayments(amountMin, amountMax);
-        List<PaymentResponseDto> response = payments.stream()
-                .map(payment -> PaymentResponseDto.builder().id(payment.getId()).build())
-                .toList();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(mapper.toDtoListIdOnly(payments));
     }
 
     @PostMapping("/{id}/cancel")
     public ResponseEntity<PaymentResponseDto> cancelPayment(@PathVariable Long id) {
-        BigDecimal fee = service.cancelPayment(id);
-        return ResponseEntity.ok(PaymentResponseDto.builder()
-                .cancellationFee(fee)
-                .build());
+        Payment payment = service.cancelPayment(id);
+        return ResponseEntity.ok(mapper.toDto(payment));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<PaymentResponseDto> getPaymentById(@PathVariable Long id) {
         Payment payment = service.getPayment(id);
-        return ResponseEntity.ok(PaymentResponseDto.builder()
-                .id(payment.getId())
-                .cancellationFee(payment.getCancellationFee())
-                .build());
+        return ResponseEntity.ok(mapper.toDto(payment));
     }
 }

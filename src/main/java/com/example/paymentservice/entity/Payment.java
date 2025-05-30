@@ -65,9 +65,6 @@ public class Payment {
     @Column(name = "CANCELLATION_FEE")
     private BigDecimal cancellationFee;
 
-    @Column(name = "NOTIFICATION_SUCCESS")
-    private Boolean notificationSuccess;
-
     @Version
     @Column(name = "VERSION")
     private Long version;

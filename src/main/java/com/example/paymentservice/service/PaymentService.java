@@ -40,7 +40,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public BigDecimal cancelPayment(Long id) {
+    public Payment cancelPayment(Long id) {
         try {
             Payment payment = repo.findById(id).orElseThrow(() -> new RuntimeException("Payment not found"));
             if (Boolean.TRUE.equals(payment.getIsCanceled())){
@@ -52,8 +52,7 @@ public class PaymentService {
             payment.setIsCanceled(Boolean.TRUE);
             BigDecimal fee = calculateCancellationFee(payment);
             payment.setCancellationFee(fee);
-            repo.save(payment);
-            return fee;
+            return repo.save(payment);
         } catch (OptimisticLockException ex) {
             throw new RuntimeException("Payment was modified concurrently. Please retry.");
         }

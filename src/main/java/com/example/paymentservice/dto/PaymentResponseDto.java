@@ -11,6 +11,5 @@ import java.math.BigDecimal;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PaymentResponseDto {
     private Long id;
-    private Boolean isCanceled;
     private BigDecimal cancellationFee;
 }

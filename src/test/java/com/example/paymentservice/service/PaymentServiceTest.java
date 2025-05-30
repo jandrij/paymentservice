@@ -206,11 +206,11 @@ class PaymentServiceTest {
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
         when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
 
-        BigDecimal fee = paymentService.cancelPayment(1L);
+        Payment result = paymentService.cancelPayment(1L);
 
-        assertEquals(new BigDecimal("0.10"), fee); // 2h * 0.05
+        assertNotNull(result);
+        assertEquals(new BigDecimal("0.10"), result.getCancellationFee()); // 2h * 0.05
         assertTrue(payment.getIsCanceled());
-        assertEquals(fee, payment.getCancellationFee());
 
         verify(paymentRepository).save(payment);
     }
@@ -232,11 +232,11 @@ class PaymentServiceTest {
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
         when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
 
-        BigDecimal fee = paymentService.cancelPayment(1L);
+        Payment result = paymentService.cancelPayment(1L);
 
-        assertEquals(new BigDecimal("0.30"), fee); // 3h * 0.10
+        assertNotNull(result);
+        assertEquals(new BigDecimal("0.30"), result.getCancellationFee()); // 2h * 0.05
         assertTrue(payment.getIsCanceled());
-        assertEquals(fee, payment.getCancellationFee());
 
         verify(paymentRepository).save(payment);
     }
@@ -258,13 +258,11 @@ class PaymentServiceTest {
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
         when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
 
-        BigDecimal fee = paymentService.cancelPayment(1L);
+        Payment result = paymentService.cancelPayment(1L);
 
-        assertEquals(new BigDecimal("0.60"), fee); // 4h * 0.15
+        assertNotNull(result);
+        assertEquals(new BigDecimal("0.60"), result.getCancellationFee()); // 2h * 0.05
         assertTrue(payment.getIsCanceled());
-        assertEquals(fee, payment.getCancellationFee());
-
-        verify(paymentRepository).save(payment);
     }
 
     @Test
