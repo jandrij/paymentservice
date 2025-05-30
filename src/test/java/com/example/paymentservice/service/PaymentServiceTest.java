@@ -5,6 +5,7 @@ import com.example.paymentservice.repository.PaymentRepository;
 import com.example.paymentservice.types.CurrencyType;
 import com.example.paymentservice.types.PaymentType;
 import com.example.paymentservice.exception.BusinessValidationException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,7 +16,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,6 +41,9 @@ class PaymentServiceTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock
+    private Clock clock;
+
     @InjectMocks
     private PaymentService paymentService;
 
@@ -50,7 +57,10 @@ class PaymentServiceTest {
                 .creditorIban("DE0987654321")
                 .details("Payment details")
                 .build();
+        Instant fixedInstant = Instant.parse("2025-01-02T10:15:30.00Z");
 
+        when(clock.instant()).thenReturn(fixedInstant);
+        when(clock.getZone()).thenReturn(ZoneId.of("UTC"));
         when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> {
             Payment p = i.getArgument(0);
             p.setId(1L);
@@ -201,10 +211,13 @@ class PaymentServiceTest {
                 .debtorIban("DE123")
                 .creditorIban("DE321")
                 .details("Payment details")
-                .createdAt(LocalDateTime.now().minusHours(2).minusMinutes(59))
+                .createdAt(LocalDateTime.of(2025, 1, 2, 8, 10))
                 .isCanceled(false)
                 .build();
+        Instant fixedInstant = Instant.parse("2025-01-02T10:15:30.00Z");
 
+        when(clock.instant()).thenReturn(fixedInstant);
+        when(clock.getZone()).thenReturn(ZoneId.of("UTC"));
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
         when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -227,17 +240,20 @@ class PaymentServiceTest {
                 .debtorIban("DE123")
                 .creditorIban("DE321")
                 .details("Payment details")
-                .createdAt(LocalDateTime.now().minusHours(3).minusMinutes(59))
+                .createdAt(LocalDateTime.of(2025, 1, 2, 7, 10))
                 .isCanceled(false)
                 .build();
+        Instant fixedInstant = Instant.parse("2025-01-02T10:15:30.00Z");
 
+        when(clock.instant()).thenReturn(fixedInstant);
+        when(clock.getZone()).thenReturn(ZoneId.of("UTC"));
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
         when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
 
         Payment result = paymentService.cancelPayment(1L);
 
         assertNotNull(result);
-        assertEquals(new BigDecimal("0.30"), result.getCancellationFee()); // 2h * 0.05
+        assertEquals(new BigDecimal("0.30"), result.getCancellationFee()); // 3h * 0.10
         assertTrue(payment.getIsCanceled());
 
         verify(paymentRepository).save(payment);
@@ -253,17 +269,20 @@ class PaymentServiceTest {
                 .debtorIban("DE123")
                 .creditorIban("DE321")
                 .details("Payment details")
-                .createdAt(LocalDateTime.now().minusHours(4).minusMinutes(59))
+                .createdAt(LocalDateTime.of(2025, 1, 2, 5, 40))
                 .isCanceled(false)
                 .build();
+        Instant fixedInstant = Instant.parse("2025-01-02T10:15:30.00Z");
 
+        when(clock.instant()).thenReturn(fixedInstant);
+        when(clock.getZone()).thenReturn(ZoneId.of("UTC"));
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
         when(paymentRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
 
         Payment result = paymentService.cancelPayment(1L);
 
         assertNotNull(result);
-        assertEquals(new BigDecimal("0.60"), result.getCancellationFee()); // 2h * 0.05
+        assertEquals(new BigDecimal("0.60"), result.getCancellationFee()); // 4h * 0.15
         assertTrue(payment.getIsCanceled());
     }
 
@@ -282,12 +301,13 @@ class PaymentServiceTest {
         Payment payment = Payment.builder()
                 .id(1L)
                 .isCanceled(true)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.of(2025, 1, 2, 0, 0))
                 .build();
 
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
 
-        RuntimeException ex = assertThrows(BusinessValidationException.class, () -> paymentService.cancelPayment(1L));
+        BusinessValidationException ex = assertThrows(
+                BusinessValidationException.class, () -> paymentService.cancelPayment(1L));
         assertEquals("Payment is already canceled", ex.getMessage());
     }
 
@@ -296,12 +316,16 @@ class PaymentServiceTest {
         Payment payment = Payment.builder()
                 .id(1L)
                 .isCanceled(false)
-                .createdAt(LocalDateTime.now().minusDays(1))
+                .createdAt(LocalDateTime.of(2025, 1, 1, 23, 59))
                 .build();
+        Instant fixedInstant = Instant.parse("2025-01-02T00:00:00.00Z");
 
+        when(clock.instant()).thenReturn(fixedInstant);
+        when(clock.getZone()).thenReturn(ZoneId.of("UTC"));
         when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
 
-        RuntimeException ex = assertThrows(BusinessValidationException.class, () -> paymentService.cancelPayment(1L));
+        BusinessValidationException ex = assertThrows(
+                BusinessValidationException.class, () -> paymentService.cancelPayment(1L));
         assertEquals("Payment can only be cancel on the same day", ex.getMessage());
     }
 }

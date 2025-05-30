@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,17 +21,19 @@ import java.util.List;
 @Service
 public class PaymentService {
 
+    private final Clock clock;
     private final PaymentRepository repo;
     private final NotificationService notificationService;
 
-    public PaymentService(PaymentRepository repo, NotificationService notificationService) {
+    public PaymentService(PaymentRepository repo, NotificationService notificationService, Clock clock) {
         this.repo = repo;
         this.notificationService = notificationService;
+        this.clock = clock;
     }
 
     public Long createPayment(Payment payment) {
         validatePayment(payment);
-        payment.setCreatedAt(LocalDateTime.now());
+        payment.setCreatedAt(LocalDateTime.now(clock));
         payment.setIsCanceled(Boolean.FALSE);
         Payment savedPayment = repo.save(payment);
         notificationService.notifyExternalService(savedPayment);
@@ -50,7 +53,7 @@ public class PaymentService {
             if (Boolean.TRUE.equals(payment.getIsCanceled())){
                 throw new BusinessValidationException("Payment is already canceled");
             }
-            if (!LocalDateTime.now().toLocalDate().equals(payment.getCreatedAt().toLocalDate())) {
+            if (!LocalDateTime.now(clock).toLocalDate().equals(payment.getCreatedAt().toLocalDate())) {
                 throw new BusinessValidationException("Payment can only be cancel on the same day");
             }
             payment.setIsCanceled(Boolean.TRUE);
@@ -63,7 +66,7 @@ public class PaymentService {
     }
 
     public BigDecimal calculateCancellationFee(Payment payment) {
-        long hours = Duration.between(payment.getCreatedAt(), LocalDateTime.now()).toHours();
+        long hours = Duration.between(payment.getCreatedAt(), LocalDateTime.now(clock)).toHours();
         BigDecimal coefficient = switch (payment.getType()) {
             case TYPE1 -> BigDecimal.valueOf(0.05);
             case TYPE2 -> BigDecimal.valueOf(0.10);
