@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  paymentservice:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - h2db
+
+  h2db:
+    image: oscarfonts/h2
+    ports:
+      - "9092:9092"
+      - "8082:8082"   # H2 console port
+    environment:
+      - H2_OPTIONS=-tcp -tcpAllowOthers -web -webAllowOthers
