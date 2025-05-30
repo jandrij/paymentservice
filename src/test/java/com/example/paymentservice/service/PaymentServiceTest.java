@@ -10,7 +10,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -269,8 +271,10 @@ class PaymentServiceTest {
     void cancelPayment_PaymentNotFound_ThrowException() {
         when(paymentRepository.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> paymentService.cancelPayment(1L));
-        assertEquals("Payment not found", ex.getMessage());
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class, () -> paymentService.cancelPayment(1L));
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        assertEquals("Payment not found", ex.getReason());
     }
 
     @Test

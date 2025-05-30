@@ -7,7 +7,9 @@ import com.example.paymentservice.exception.BusinessValidationException;
 import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -36,13 +38,15 @@ public class PaymentService {
     }
 
     public Payment getPayment(Long id) {
-        return repo.findById(id).orElseThrow(() -> new RuntimeException("Payment not found"));
+        return repo.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
     }
 
     @Transactional
     public Payment cancelPayment(Long id) {
         try {
-            Payment payment = repo.findById(id).orElseThrow(() -> new RuntimeException("Payment not found"));
+            Payment payment = repo.findById(id).orElseThrow(
+                    () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
             if (Boolean.TRUE.equals(payment.getIsCanceled())){
                 throw new BusinessValidationException("Payment is already canceled");
             }

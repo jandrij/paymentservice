@@ -11,6 +11,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -74,6 +75,16 @@ public class GlobalExceptionHandler {
                 .errors(List.of("HTTP method not supported: " + ex.getMethod()))
                 .build();
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(errorResponseDTO);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponseDTO> handle(ResponseStatusException ex) {
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .errors(List.of(ex.getReason() != null
+                                ? ex.getReason()
+                                : "An unexpected error occurred. Please try again later."))
+                .build();
+        return ResponseEntity.status(ex.getStatusCode()).body(errorResponseDTO);
     }
 
     @ExceptionHandler(Exception.class)
