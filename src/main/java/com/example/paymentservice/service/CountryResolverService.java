@@ -1,5 +1,6 @@
 package com.example.paymentservice.service;
 
+import io.micrometer.common.util.StringUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,11 @@ public class CountryResolverService {
         try {
             String url = "https://ipapi.co/" + ip + "/country_name/";
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-            if (response.getStatusCode().is2xxSuccessful()) {
-                String country = response.getBody();
+            String country = response.getBody();
+            if (response.getStatusCode().is2xxSuccessful()
+                    && StringUtils.isNotBlank(country)
+                    && !country.equals("Undefined")) {
+
                 log.info("Client from country: {}", country);
             } else {
                 log.warn("Failed to resolve country for IP: {}", ip);
