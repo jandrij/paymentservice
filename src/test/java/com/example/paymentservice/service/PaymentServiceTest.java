@@ -94,6 +94,57 @@ class PaymentServiceTest {
     }
 
     @Test
+    void testCreatePayment_CreditorBankBicProvidedForType1_throwsException() {
+        Payment paymentToSave = Payment.builder()
+                .type(PaymentType.TYPE1)
+                .amount(new BigDecimal("100.00"))
+                .currency(CurrencyType.EUR)
+                .debtorIban("DE1234567890")
+                .creditorIban("DE0987654321")
+                .details("Payment details")
+                .creditorBankBic("NORZNOZZ77")
+                .build();
+
+        RuntimeException ex = assertThrows(BusinessValidationException.class,
+                () -> paymentService.createPayment(paymentToSave));
+        assertEquals("Creditor Bank BIC is not allowed for TYPE1 payments", ex.getMessage());
+    }
+
+    @Test
+    void testCreatePayment_CreditorBankBicProvidedForType2_throwsException() {
+        Payment paymentToSave = Payment.builder()
+                .type(PaymentType.TYPE2)
+                .amount(new BigDecimal("100.00"))
+                .currency(CurrencyType.USD)
+                .debtorIban("DE1234567890")
+                .creditorIban("DE0987654321")
+                .details("Payment details")
+                .creditorBankBic("NORZNOZZ77")
+                .build();
+
+        RuntimeException ex = assertThrows(BusinessValidationException.class,
+                () -> paymentService.createPayment(paymentToSave));
+        assertEquals("Creditor Bank BIC is not allowed for TYPE2 payments", ex.getMessage());
+    }
+
+    @Test
+    void testCreatePayment_DetailsProvidedForType1_throwsException() {
+        Payment paymentToSave = Payment.builder()
+                .type(PaymentType.TYPE3)
+                .amount(new BigDecimal("100.00"))
+                .currency(CurrencyType.EUR)
+                .debtorIban("DE1234567890")
+                .creditorIban("DE0987654321")
+                .details("Payment details")
+                .creditorBankBic("NORZNOZZ77")
+                .build();
+
+        RuntimeException ex = assertThrows(BusinessValidationException.class,
+                () -> paymentService.createPayment(paymentToSave));
+        assertEquals("Details are not allowed for TYPE3 payments", ex.getMessage());
+    }
+
+    @Test
     void testCreatePayment_invalidCurrencyForType2_throwsException() {
         Payment paymentToSave = Payment.builder()
                 .type(PaymentType.TYPE2)
@@ -148,7 +199,7 @@ class PaymentServiceTest {
                 .debtorIban("DE123")
                 .creditorIban("DE321")
                 .details("Payment details")
-                .createdAt(LocalDateTime.now().minusHours(2).minusMinutes(20))
+                .createdAt(LocalDateTime.now().minusHours(2).minusMinutes(59))
                 .isCanceled(false)
                 .build();
 
@@ -174,7 +225,7 @@ class PaymentServiceTest {
                 .debtorIban("DE123")
                 .creditorIban("DE321")
                 .details("Payment details")
-                .createdAt(LocalDateTime.now().minusHours(3).minusMinutes(20))
+                .createdAt(LocalDateTime.now().minusHours(3).minusMinutes(59))
                 .isCanceled(false)
                 .build();
 
@@ -200,7 +251,7 @@ class PaymentServiceTest {
                 .debtorIban("DE123")
                 .creditorIban("DE321")
                 .details("Payment details")
-                .createdAt(LocalDateTime.now().minusHours(4).minusMinutes(20))
+                .createdAt(LocalDateTime.now().minusHours(4).minusMinutes(59))
                 .isCanceled(false)
                 .build();
 

@@ -83,15 +83,24 @@ public class PaymentService {
                 if (payment.getDetails() == null || payment.getDetails().isEmpty()) {
                     throw new BusinessValidationException("Details are required for TYPE1 payment");
                 }
+                if (payment.getCreditorBankBic() != null) {
+                    throw new BusinessValidationException("Creditor Bank BIC is not allowed for TYPE1 payments");
+                }
             }
             case TYPE2 -> {
                 if (!CurrencyType.USD.equals(payment.getCurrency())) {
                     throw new BusinessValidationException("Payment of TYPE2 must be USD");
                 }
+                if (payment.getCreditorBankBic() != null) {
+                    throw new BusinessValidationException("Creditor Bank BIC is not allowed for TYPE2 payments");
+                }
             }
             case TYPE3 -> {
                 if (StringUtils.isBlank(payment.getCreditorBankBic())) {
                     throw new BusinessValidationException("Creditor bank BIC is required for TYPE3 payment");
+                }
+                if (payment.getDetails() != null) {
+                    throw new BusinessValidationException("Details are not allowed for TYPE3 payments");
                 }
             }
         }
