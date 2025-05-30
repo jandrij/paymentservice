@@ -104,10 +104,14 @@ public class PaymentService {
         }
     }
 
-    public List<Payment> getFilteredPayments(BigDecimal amountMin) {
-        if (amountMin != null && amountMin.compareTo(BigDecimal.ZERO) < 0) {
+    public List<Payment> getFilteredPayments(BigDecimal amountMin, BigDecimal amountMax) {
+        if ((amountMin != null && amountMin.compareTo(BigDecimal.ZERO) < 0)
+                || (amountMax != null && amountMax.compareTo(BigDecimal.ZERO) < 0)) {
             throw new BusinessValidationException("Monetary value can not be negative");
         }
-        return repo.findActivePaymentsWithOptionalMinAmount(amountMin);
+        if (amountMin != null && amountMax != null && amountMax.compareTo(amountMin) < 0) {
+            throw new BusinessValidationException("AmountMax should be larger then or equal to AmountMin");
+        }
+        return repo.findActivePaymentsWithOptionalMinAmount(amountMin, amountMax);
     }
 }

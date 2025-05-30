@@ -14,7 +14,10 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     @Query("""
     SELECT p FROM Payment p
-    WHERE p.isCanceled = false AND (:amountMin IS NULL OR p.amount >= :amountMin)
+    WHERE p.isCanceled = false
+    AND (:amountMin IS NULL OR p.amount >= :amountMin)
+    AND (:amountMax IS NULL OR p.amount <= :amountMax)
     """)
-    List<Payment> findActivePaymentsWithOptionalMinAmount(@Param("amountMin") BigDecimal amountMin);
+    List<Payment> findActivePaymentsWithOptionalMinAmount(@Param("amountMin") BigDecimal amountMin,
+                                                          @Param("amountMax") BigDecimal amountMax);
 }

@@ -45,8 +45,9 @@ public class PaymentController {
 
     @GetMapping
     public ResponseEntity<List<PaymentResponseDto>> getAllActivePayments(
-            @RequestParam(required = false) BigDecimal amountMin) {
-        List<Payment> payments = service.getFilteredPayments(amountMin);
+            @RequestParam(required = false) BigDecimal amountMin,
+            @RequestParam(required = false) BigDecimal amountMax) {
+        List<Payment> payments = service.getFilteredPayments(amountMin, amountMax);
         List<PaymentResponseDto> response = payments.stream()
                 .map(payment -> PaymentResponseDto.builder().id(payment.getId()).build())
                 .toList();
