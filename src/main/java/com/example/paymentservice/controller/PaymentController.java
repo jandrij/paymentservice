@@ -63,8 +63,7 @@ public class PaymentController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PaymentResponseDto> getPaymentById(@PathVariable Long id) {
-        Payment payment = service.getPayment(id)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
+        Payment payment = service.getPayment(id);
         return ResponseEntity.ok(PaymentResponseDto.builder()
                 .id(payment.getId())
                 .cancellationFee(payment.getCancellationFee())

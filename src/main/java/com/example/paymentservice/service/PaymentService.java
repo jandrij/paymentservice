@@ -7,7 +7,6 @@ import com.example.paymentservice.exception.BusinessValidationException;
 import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,7 +14,6 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class PaymentService {
@@ -37,8 +35,8 @@ public class PaymentService {
         return savedPayment.getId();
     }
 
-    public Optional<Payment> getPayment(Long id) {
-        return repo.findById(id);
+    public Payment getPayment(Long id) {
+        return repo.findById(id).orElseThrow(() -> new RuntimeException("Payment not found"));
     }
 
     @Transactional

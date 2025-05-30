@@ -32,30 +32,42 @@ public class Payment {
     @GeneratedValue
     @Column(name = "ID", nullable = false)
     private Long id;
+
     @Column(name = "CREATED_AT", nullable = false)
     private LocalDateTime createdAt;
+
     @Column(name = "AMOUNT", nullable = false)
     private BigDecimal amount;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "CURRENCY", nullable = false)
     private CurrencyType currency;
+
     @Column(name = "DEBTOR_IBAN", nullable = false)
     private String debtorIban;
+
     @Column(name = "CREDITOR_IBAN", nullable = false)
     private String creditorIban;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "TYPE", nullable = false)
     private PaymentType type;
+
     @Column(name = "DETAILS")
     private String details;
+
     @Column(name = "CREDITOR_BANK_BIC")
     private String creditorBankBic;
+
     @Column(name = "IS_CANCELED", nullable = false)
     private Boolean isCanceled;
+
     @Column(name = "CANCELLATION_FEE")
     private BigDecimal cancellationFee;
+
     @Column(name = "NOTIFICATION_SUCCESS")
     private Boolean notificationSuccess;
+
     @Version
     @Column(name = "VERSION")
     private Long version;
