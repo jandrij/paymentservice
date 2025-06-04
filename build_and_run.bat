@@ -1,5 +1,5 @@
 echo Building Spring Boot app with Maven...
-call mvn clean package -DskipTests
+call mvn clean package
 echo Maven exited with ERRORLEVEL=%ERRORLEVEL%
 IF %ERRORLEVEL% NEQ 0 (
     echo Maven build failed. Exiting.
