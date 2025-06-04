@@ -1,18 +1,18 @@
-package com.example.paymentservice.service;
+package com.example.paymentservice.unit.service;
 
 import com.example.paymentservice.entity.Payment;
+import com.example.paymentservice.exception.BusinessValidationException;
 import com.example.paymentservice.repository.PaymentRepository;
+import com.example.paymentservice.service.NotificationService;
+import com.example.paymentservice.service.PaymentService;
 import com.example.paymentservice.types.CurrencyType;
 import com.example.paymentservice.types.PaymentType;
-import com.example.paymentservice.exception.BusinessValidationException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -23,14 +23,12 @@ import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.any;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
