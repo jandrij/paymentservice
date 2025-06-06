@@ -7,6 +7,6 @@ import java.util.List;
 
 @Data
 @Builder
-public class ErrorResponseDTO {
+public class ErrorResponseDto {
     private List<String> errors;
 }

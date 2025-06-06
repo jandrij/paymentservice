@@ -3,22 +3,15 @@ package com.example.paymentservice.interceptor;
 import com.example.paymentservice.service.CountryResolverService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
+@RequiredArgsConstructor
 public class CountryLoggingInterceptor implements HandlerInterceptor {
 
     private final CountryResolverService countryResolverService;
-
-    public CountryLoggingInterceptor(CountryResolverService countryResolverService) {
-        this.countryResolverService = countryResolverService;
-    }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {

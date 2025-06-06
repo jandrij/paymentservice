@@ -1,6 +1,6 @@
 package com.example.paymentservice.handler;
 
-import com.example.paymentservice.dto.ErrorResponseDTO;
+import com.example.paymentservice.dto.ErrorResponseDto;
 import com.example.paymentservice.exception.BusinessValidationException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,7 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDTO> handle(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponseDto> handle(MethodArgumentNotValidException ex) {
 
         List<String> errors = ex.getBindingResult()
                 .getFieldErrors()
@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .toList();
 
-        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+        ErrorResponseDto errorResponseDTO = ErrorResponseDto.builder()
                 .errors(errors)
                 .build();
 
@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponseDTO> handle(HttpMessageNotReadableException ex) {
+    public ResponseEntity<ErrorResponseDto> handle(HttpMessageNotReadableException ex) {
         Throwable cause = ex.getCause();
         if (cause instanceof InvalidFormatException ife && ife.getTargetType().isEnum()) {
             String fieldName = ife.getPath().get(0).getFieldName();
@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
                     Arrays.toString(validValues)
             );
 
-            ErrorResponseDTO errorResponse = ErrorResponseDTO.builder()
+            ErrorResponseDto errorResponse = ErrorResponseDto.builder()
                     .errors(List.of(message))
                     .build();
 
@@ -62,24 +62,24 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(BusinessValidationException.class)
-    public ResponseEntity<ErrorResponseDTO> handle(BusinessValidationException ex) {
-        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+    public ResponseEntity<ErrorResponseDto> handle(BusinessValidationException ex) {
+        ErrorResponseDto errorResponseDTO = ErrorResponseDto.builder()
                 .errors(List.of(ex.getMessage()))
                 .build();
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errorResponseDTO);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorResponseDTO> handle(HttpRequestMethodNotSupportedException ex) {
-        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+    public ResponseEntity<ErrorResponseDto> handle(HttpRequestMethodNotSupportedException ex) {
+        ErrorResponseDto errorResponseDTO = ErrorResponseDto.builder()
                 .errors(List.of("HTTP method not supported: " + ex.getMethod()))
                 .build();
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(errorResponseDTO);
     }
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ErrorResponseDTO> handle(ResponseStatusException ex) {
-        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+    public ResponseEntity<ErrorResponseDto> handle(ResponseStatusException ex) {
+        ErrorResponseDto errorResponseDTO = ErrorResponseDto.builder()
                 .errors(List.of(ex.getReason() != null
                                 ? ex.getReason()
                                 : "An unexpected error occurred. Please try again later."))
@@ -88,8 +88,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDTO> handleGenericException(Exception ex) {
-        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+    public ResponseEntity<ErrorResponseDto> handleGenericException(Exception ex) {
+        ErrorResponseDto errorResponseDTO = ErrorResponseDto.builder()
                 .errors(List.of("An unexpected error occurred. Please try again later."))
                 .build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponseDTO);

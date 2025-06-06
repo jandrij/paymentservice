@@ -6,6 +6,7 @@ import com.example.paymentservice.entity.Payment;
 import com.example.paymentservice.mapper.PaymentMapper;
 import com.example.paymentservice.service.PaymentService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,15 +22,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/payments")
+@RequiredArgsConstructor
 public class PaymentController {
 
     private final PaymentService service;
     private final PaymentMapper mapper;
-
-    public PaymentController(PaymentService service, PaymentMapper mapper) {
-        this.service = service;
-        this.mapper = mapper;
-    }
 
     @PostMapping
     public ResponseEntity<PaymentResponseDto> createPayment(@RequestBody @Valid CreatePaymentRequestDto request) {

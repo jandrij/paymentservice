@@ -2,6 +2,7 @@ package com.example.paymentservice.integration.controller;
 
 import com.example.paymentservice.repository.PaymentRepository;
 import com.example.paymentservice.service.CountryResolverService;
+import com.example.paymentservice.service.CountryResolverServiceImpl;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -23,7 +23,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("it")
 @SpringBootTest
 @AutoConfigureMockMvc
 class PaymentControllerTest {
@@ -38,7 +37,7 @@ class PaymentControllerTest {
     static class MockConfig {
         @Bean
         public CountryResolverService countryResolverService() {
-            return Mockito.mock(CountryResolverService.class);
+            return Mockito.mock(CountryResolverServiceImpl.class);
         }
     }
 
